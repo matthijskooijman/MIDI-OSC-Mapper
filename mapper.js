@@ -263,31 +263,6 @@ to_surface = (name, address, ...args) => {
     send('midi', name, address, ...args)
 }
 
-init = () => {
-    if (settings.read('send')) {
-        [send_host, send_port] = settings.read('send')[0].split(':')
-    } else {
-        console.warn('(WARNING) "send" option not set')
-    }
-
-    for (const [key, value] of Object.entries(constants)) {
-        nerdamer.setConstant(key, value)
-    }
-
-    to_ardour("/set_surface",
-              BANK_SIZE,
-              STRIP_TYPES,
-              FEEDBACK,
-              FADER_MODE,
-              SEND_PAGE_SIZE,
-              PLUGIN_PAGE_SIZE,
-    );
-
-    // Uncomment this to get parameter descriptions for a plugin,
-    // passing strip and plugin indices (1-based)
-    // describe_plugin(3, 1)
-}
-
 plugin_info = {}
 
 // Parameters are 1-based
@@ -496,22 +471,50 @@ module.exports = {
     }
     */
 
+    // This is called whenever the module is loaded, so on startup
+    // (before init()) and then whenever the module is autoreloaded.
+    // This should set up any javascript state (which is discarded on
+    // autoreload).
+    init_reload: () => {
+        if (settings.read('send')) {
+            [send_host, send_port] = settings.read('send')[0].split(':')
+        } else {
+            console.warn('(WARNING) "send" option not set')
+        }
+
+        for (const [key, value] of Object.entries(constants)) {
+            nerdamer.setConstant(key, value)
+        }
+    },
+
+    // This is called once on startup by open-stage-control after the
+    // OSC connection is set up. This should send startup OSC commands
+    // to initialize the connection. It is not called again when the
+    // module is reloaded, so any javascript state should be set up in
+    // init_reload()
+    init: () => {
+        to_ardour("/set_surface",
+                  BANK_SIZE,
+                  STRIP_TYPES,
+                  FEEDBACK,
+                  FADER_MODE,
+                  SEND_PAGE_SIZE,
+                  PLUGIN_PAGE_SIZE,
+        );
+
+        // Uncomment this to get parameter descriptions for a plugin,
+        // passing strip and plugin indices (1-based)
+        // describe_plugin(3, 1)
+
+        //module.exports['oscInFilter']({'address': '/pitch', 'args': [ { type: 'i', value: 9 }, { type: 'i', value: 15792 } ], 'host': 'midi', 'port': 'xtouch'});
+        //console.log(nerdamer.solveEquations(['dummy=1', 'dummy1>0']))
+        //console.log(parseFloat(nerdamer('v / 100', {'v': 10}).toString()))
+        //console.log(nerdamer('(v > 10) * (v > 2)', {'v': 10}).toDecimal())
+        //console.log(nerdamer('c').equals(nerdamer(1)))
+        //console.log(nerdamer.solveEquations(['dummy=1', 'c=2', nerdamer('d').equals(nerdamer(2))]))
+        //console.log(nerdamer('1').variables())
+        //console.log(nerdamer('(v => 11)', {'v': 10}).toDecimal())
+    },
 }
 
-
-// TODO: It seems that this might be too soon to send OSC messages.
-// Touching this file after open-sound-control starts forces a reload,
-// which then *does* init correctly
-init()
-
-//to_ardour('/strip/plugin/list', 1)
-
-//module.exports['oscInFilter']({'address': '/pitch', 'args': [ { type: 'i', value: 9 }, { type: 'i', value: 15792 } ], 'host': 'midi', 'port': 'xtouch'});
-
-//console.log(nerdamer.solveEquations(['dummy=1', 'dummy1>0']))
-//console.log(parseFloat(nerdamer('v / 100', {'v': 10}).toString()))
-//console.log(nerdamer('(v > 10) * (v > 2)', {'v': 10}).toDecimal())
-//console.log(nerdamer('c').equals(nerdamer(1)))
-//console.log(nerdamer.solveEquations(['dummy=1', 'c=2', nerdamer('d').equals(nerdamer(2))]))
-//console.log(nerdamer('1').variables())
-//console.log(nerdamer('(v => 11)', {'v': 10}).toDecimal())
+module.exports.init_reload()
