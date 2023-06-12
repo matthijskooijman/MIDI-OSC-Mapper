@@ -1,0 +1,3 @@
+[submodule "nerdamer-prime"]
+	path = nerdamer-prime
+	url = https://github.com/together-science/nerdamer-prime.git
