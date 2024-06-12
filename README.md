@@ -33,6 +33,33 @@ Setup
    input and output, though adding a bit of GUI (e.g. to show some
    additional state about the control surface) can be a future addition.
 
+Emulating a control surface
+---------------------------
+
+    open-stage-control --midi x-touch:virtual --load virtual-x-touch.json --send midi:x-touch --port 8081
+
+Improved (more complete) version that autogenerates all widges using
+a custom module:
+
+    open-stage-control --midi x-touch:virtual --send midi:x-touch --custom-module xtouch.js --load xtouch.json  --debug
+
+This creates a virtual midi device named `x-touch` with two parts, named
+`midi_in` and `midi_out`. They are shown as such in `open-stage-control
+--midi list`. In QLCplus (after restart) only the port names are shown.
+
+TODO:
+ - Different layers (a/b/mackie). Idea: Pass layername around to
+   widget-generating functions and use to prefix the widget ids and add
+   an offset to the midi messages.
+ - Buttons on the encoders. OSC knobs cannot also be buttons, so maybe
+   create a panel with a knob and a button absolutely positioned over
+   the knob?
+ - Better match layout (button sizes and overally aspect ratio) to
+   actual xtouch.
+ - Add icons to control buttons on the right.
+ - Add touch events to faders? Seems there is an onTouch event handler,
+   maybe that have JS to emit these events?
+
 Status
 ------
 This repository currently contains a very rough initial prototype, where
@@ -47,3 +74,22 @@ specific control surfaces). Maybe this will eventually evolve into
 a polished tool to use alongside others, but ideally Ardour's control
 surface mapping will be made more flexible and this tool can become
 obsolete.
+
+
+TODO
+ - Maybe use an OSC UI with widgets to do the mapping. Create (hidden?) widgets
+   for all possible ardour controls, and (visible?) widgets for all
+   xtouch controls. Then use linkID to connect them depending on the
+   mode. This UI can also serve as an indicator of the current mode and
+   to show the function of encoders/buttons.
+
+   The ardour widgets can then store feedback values even when not
+   linked/active. When setting linkid to a control, it will force its
+   value on existing controls with the same linkid (so the ardour
+   widgets must have their linkId modified to point to the xtouch
+   widgets).
+
+   This could share code wit the virtual xtouch maybe?
+ - Make sure that the mode-switching is flexible enough to implement
+   send-to-fader (for reverb mutes and level). Does this work with
+   Ardour-based banking, or should we implement banking ourselves then?

@@ -26,6 +26,32 @@ const FADER_MODE = 2; // Fader feedback uses both dB and fader position
 const SEND_PAGE_SIZE = 8; // TODO
 const PLUGIN_PAGE_SIZE = 8; // TODO
 
+mappings = {
+    'xtouch': [
+        {
+            // Master fader
+            'surface': ['/control', 1, 9, 'value'],
+            'control': ['/fader/master'],
+            'max': 127,
+        },
+        {
+            // Channel faders
+            'surface': ['/control', 1, 'c', 'value'],
+            'control': ['/fader', 'c'],
+            'for': {
+                'c': [1, 2, 3, 4, 5, 6, 7, 8],
+            },
+        },
+        {
+            // Channel rotaries
+            'surface': ['/control', 1, 'c+9', 'value'],
+            'control': ['/rotary/channel', 'c'],
+            'for': {
+                'c': [1, 2, 3, 4, 5, 6, 7, 8],
+            },
+        },
+    ],
+}
 
 // This defines the mappings from the midi surface to ardour (and the
 // reverse is automatically used for feedback).
