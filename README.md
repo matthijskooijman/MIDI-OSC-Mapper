@@ -7,6 +7,11 @@ control surface to control Ardour through OSC, but with an appropriate
 mapping defined, should also be useful for other control surfacs and
 possibly other DAW or other software that supports OSC.
 
+This code requires:
+ - open-stage-control version 1.27.0 or newer (for the /SESSION/CREATE command).
+ - Ardour 8.7 or newer. Also makes use of these unmerged (as of 2026-10) pull requests:
+    - https://github.com/Ardour/ardour/pull/901 and
+    - https://github.com/Ardour/ardour/pull/897
 
 Setup
 -----
@@ -18,20 +23,34 @@ Setup
  - Start open-stage-control with something like:
 
    ```
-   open-stage-control --debug --midi xtouch:x-touch,x-touch icon:icon,icon --custom-module mapper.js --send 127.0.0.1:3819 --no-gui
+   open-stage-control --debug --midi xtouch:x-touch,x-touch icon:icon,icon --custom-module ardour-xtouch.js --send 127.0.0.1:3819
    ```
 
-   This sets up two midi devices, e.g. one named xtouch that uses input
-   and output ports with "x-touch" in their name, one named "icon" with
-   ports with "icon" in their name. Adapt to your needs, run
+   This sets up two midi devices using `--midi`, e.g. one named xtouch that
+   uses input and output ports with "x-touch" in their name, one named "icon"
+   with ports with "icon" in their name. Adapt to your needs, run
    `open-stage-control --midi list` to get a list of ports.
 
-   It also sets up an OSC connection to Ardour on the default OSC port.
+   It also sets up an OSC connection to Ardour on the default OSC port using
+   `--send`.
 
-   Finally, this does not set up or even show a open-stage-control GUI,
-   since this really just uses open-stage-control for OSC and midi
-   input and output, though adding a bit of GUI (e.g. to show some
-   additional state about the control surface) can be a future addition.
+   The module loaded defines the setup to use, in this example it contains the
+   mappings for using the xtouch surface with the ardour application. This
+   command will show a GUI, which shows a virtual copy of the xtouch surface
+   that is used to show labels for controls and reflect the current state.
+
+ - To run open-stage-control from a git checkout, you can run this control in its git checkout:
+
+   ```
+   npm run start -- --debug --midi xtouch:x-touch,x-touch icon:icon,icon --custom-module /path/to/ardour-xtouch.js --send 127.0.0.1:3819 --port 8082
+   ```
+
+Ardour setup
+-------------
+ - Check Edit -> Preferences -> Control surfaces -> Open Sound Control (OSC)
+ - Under Protocol settings defaults are ok (Only needs "Reply on same
+   port", the rest will be overwritten on connect anyway).
+ - Needs at least one plugin, otherwise init fails
 
 Emulating a control surface
 ---------------------------
@@ -75,21 +94,39 @@ a polished tool to use alongside others, but ideally Ardour's control
 surface mapping will be made more flexible and this tool can become
 obsolete.
 
+Ardour interface
+----------------
 
-TODO
- - Maybe use an OSC UI with widgets to do the mapping. Create (hidden?) widgets
-   for all possible ardour controls, and (visible?) widgets for all
-   xtouch controls. Then use linkID to connect them depending on the
-   mode. This UI can also serve as an indicator of the current mode and
-   to show the function of encoders/buttons.
+### Startup sequence
+In `ardour.js`:
+ - On load/reload, a `/set_surface` is sent to register and configure as
+   a surface with ardour. This triggers feedback with current values for
+   various strip controls.
+ - After a short time, `/strip/list` is sent to query the full list of
+   available strips.
+ - For each strip this query returns, appropriate controls are added and
+   `strip/plugin/list` is sent to query the full list of plugins for
+   that strip.
+ - For each plugin this query returns, some info is stored in
+   `plugin_info`, and a `/strip/plugin/descriptor` query is sent to
+   retrieve all plugin parameters.
+ - For each parameter this query returns, info is stored
+   in `plugin_info` and appropriate controls are added.
+ - Once all parameters are queried, the `init_complete()` callback is
+   called.
 
-   The ardour widgets can then store feedback values even when not
-   linked/active. When setting linkid to a control, it will force its
-   value on existing controls with the same linkid (so the ardour
-   widgets must have their linkId modified to point to the xtouch
-   widgets).
+All this relies on the fact that ardour processes queries one by one and
+queues replies for one query before processing the next query (so we can
+assume that replies to an earlier query will be received before replies
+to a later query).
 
-   This could share code wit the virtual xtouch maybe?
- - Make sure that the mode-switching is flexible enough to implement
-   send-to-fader (for reverb mutes and level). Does this work with
-   Ardour-based banking, or should we implement banking ourselves then?
+In `ardour-xtouch.js`, on program startup:
+ - When an osc client (UI) connects, a `/SESSION/CREATE` command is sent
+   to create a new, empty, session.
+ - When the session is created, and the ardour initialization is also
+   complete (`init_complete` callback called), further initialization
+   (setting up the UI, setting up virtual controls, setting up control
+   links) is done and the system is operational.
+
+On a reload, the session is assumed to be created already, so further
+initialization is done as soon as ardour is done.
