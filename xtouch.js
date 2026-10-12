@@ -1,15 +1,27 @@
+// These are predefined by open-stage-control. Declare them again to
+// prevent tsserver check errors. Assigning them from global.something
+// (which are just the same variables) to prevent "possibly 'undefined'"
+// errors.
+var send = send
+var receive = receive
+var app = app
+var settings = settings
+
+var send_host
+var send_port
+
 // Shorthand for osc sending to default app / target
-to_send = (address, ...args) => {
+let to_send = (address, ...args) => {
     send(send_host, send_port, address, ...args)
 }
 
-to_osc = (address, ...args)=>{
+let to_osc = (address, ...args)=>{
     receive(send_host, send_port, address, ...args)
 }
 
-CHANNEL_WIDTH = 100
-NUM_CHANNELS = 8
-ENCODER_BUTTON_HEIGHT = 20
+const CHANNEL_WIDTH = 100
+const NUM_CHANNELS = 8
+const ENCODER_BUTTON_HEIGHT = 20
 // TODO: knobSize for faders
 
 function create_widgets() {
@@ -31,7 +43,7 @@ function create_widgets() {
 }
 
 function create_master() {
-    widgets = []
+    let widgets = []
     widgets.push({
         type: 'panel',
         id: 'master_spacer',
@@ -76,9 +88,9 @@ function create_master() {
 
 
 function create_side_panel() {
-    encoders = []
+    let encoders = []
     for(var encoder_idx = 0; encoder_idx < 8; encoder_idx++) {
-        encoder_num = 9 + encoder_idx
+        let encoder_num = 9 + encoder_idx
         encoders.push({
             type: 'panel',
             layout: 'vertical',
@@ -111,9 +123,9 @@ function create_side_panel() {
         })
     }
 
-    buttons = []
+    let buttons = []
     for(var button_idx = 0; button_idx < 6; button_idx++) {
-        button_num = button_idx + 1
+        let button_num = button_idx + 1
         buttons.push({
             type: 'button',
             // Send on-value when pressed, never send off value.
@@ -165,11 +177,11 @@ function create_side_panel() {
 }
 
 function create_channels() {
-    channels = []
+    let channels = []
     for(var channel_idx = 0; channel_idx < NUM_CHANNELS; channel_idx++) {
-        channel_num = channel_idx + 1
+        let channel_num = channel_idx + 1
 
-        widgets = []
+        let widgets = []
         widgets.push({
             type: 'panel',
             layout: 'vertical',
@@ -202,7 +214,7 @@ function create_channels() {
         })
 
         for(var button_idx = 0; button_idx < 3; button_idx++) {
-            button_num = button_idx + 1
+            let button_num = button_idx + 1
             widgets.push({
                 type: 'button',
                 // Send on-value when pressed, never send off value.
@@ -265,7 +277,7 @@ function create_channels() {
 
 function update_widgets() {
     if (!(global.surface_no_init ?? false)) {
-        widgets = create_widgets()
+        let widgets = create_widgets()
         to_osc('/EDIT', 'root', {
             widgets: widgets,
         })
