@@ -23,13 +23,16 @@ Setup
  - Start open-stage-control with something like:
 
    ```
-   open-stage-control --debug --midi xtouch:x-touch,x-touch icon:icon,icon --custom-module ardour-xtouch.js --send 127.0.0.1:3819
+   open-stage-control --debug --read-only --midi xtouch:x-touch,x-touch icon:icon,icon --custom-module ardour-xtouch.js --send 127.0.0.1:3819
    ```
 
    This sets up two midi devices using `--midi`, e.g. one named xtouch that
    uses input and output ports with "x-touch" in their name, one named "icon"
    with ports with "icon" in their name. Adapt to your needs, run
    `open-stage-control --midi list` to get a list of ports.
+
+   `--read-only` makes sure the UI cannot be edited interactively (and thus
+   also does not start up in editor mode).
 
    It also sets up an OSC connection to Ardour on the default OSC port using
    `--send`.
