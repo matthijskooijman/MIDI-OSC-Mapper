@@ -300,6 +300,9 @@ class Application extends ControlContainer {
 
         for (let link of links) {
             let [surface, id, params={}] = link
+	    // Allow passing null if the surface is not set up yet
+	    if (!surface)
+		continue
             let surface_control = surface.controls[id]
             if (surface_control === undefined) {
                 console.warn(`Trying to link unknown surface control surface=${surface.name}, id=${id}`)
