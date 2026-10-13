@@ -4,6 +4,8 @@ function visitWidgets(widgets, callback) {
         if (widget.type == "panel") {
             if ("widgets" in widget)
                 widget.widgets = visitWidgets(widget.widgets, callback)
+            if ("tabs" in widget)
+                widget.tabs = visitWidgets(widget.tabs, callback)
             new_widgets.push(widget)
         } else {
             let result = callback(widget)
