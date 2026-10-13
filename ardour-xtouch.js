@@ -387,9 +387,6 @@ function maybe_initialize(new_state) {
     }
 }
 
-var app_init_complete = false
-var session_setup_complete = false
-
 // This sets up javascript state and is ran on both first load and reload
 function load() {
     // TODO: Move to load function or so and keep only widget
@@ -428,7 +425,6 @@ module.exports = {
     init: () => {
         load()
         application.init()
-        //xtouch.init();
 
         // This sets up a new session to prevent having to pass `--load`
         // oni the commmandline. This is done only once at startup, not
