@@ -89,26 +89,25 @@ class SurfaceControl extends Control {
                 // from the surface to keep it on.
                 // So buttons in "toggle" mode is probably better, but
                 // not default...
-                if (!value)
-                   return
-                // Assume any message is a buttonpress (either because the surface
-                // sends only "on" messages, or it sends the inverse of whatever
-                // it thinks the current state is) and invert the app state
-                // value accordingly
+		// Update: Handle this with a separate tap and release property on the app control instead?
+
                 // TODO: Should this use link.tap instead?
                 let tap_value = app_control.tap ?? this.link.on_value
-                if (tap_value !== undefined) {
-                    // If a tap_value is set, always just send that
-                    app_control.sendValue(tap_value)
-                } else {
-                    // Otherwise, assume this is a toggling state, so invert the
+                let release_value = app_control.release ?? 0
+                if (tap_value === undefined && release_value === undefined && value) {
+                    // No tap and release, so assume this is a toggling state, so invert the
                     // current app state and send that.
                     // This assumes that any value not off is on
                     let is_on = (app_control.value != app_control.off)
                     let toggled_value = is_on ? app_control.off : app_control.on
 
                     app_control.sendValue(toggled_value)
-                }
+                } else if (tap_value !== undefined && value) {
+                    // If a tap_value is set, always just send that
+                    app_control.sendValue(tap_value)
+                } else if (release_value !== undefined && !value) {
+                    app_control.sendValue(release_value)
+		}
             } else {
                 console.warn("forward_to_app: Unsupported control type: " + app_control.type)
             }
